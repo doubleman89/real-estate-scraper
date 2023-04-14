@@ -1,0 +1,9 @@
+capstone/.env
+
+
+#enviroments 
+venv/
+.venv
+env/
+.env
+
