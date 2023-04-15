@@ -1,0 +1,22 @@
+body {
+    padding: 10px;
+}
+
+
+.wrapper {
+    width: 100%;
+  }
+  
+.box {
+  float: left;
+}
+
+.box:nth-child(1) {
+  width: 75%;
+}
+
+.box:nth-child(2) {
+  width: 25%;
+}
+  
+  
