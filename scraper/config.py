@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
         print(os.path.dirname('current path'))
 
 @lru_cache

@@ -1,0 +1,12 @@
+version: "2"
+services:
+
+  worker:
+    build: './'
+    links:
+      - redis
+
+  redis:
+    image: 'redis:alpine3.17'
+    ports:
+      - '6379:6379'

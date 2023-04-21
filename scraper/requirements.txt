@@ -1,0 +1,6 @@
+celery
+redis
+celery
+cassandra-driver
+fastapi
+python-dotenv
