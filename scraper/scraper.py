@@ -6,8 +6,7 @@ from dataclasses import dataclass,field
 from time import sleep
 import re
 from requests_html import HTML
-# from datetime import date
-# from crud import create_entry
+
 
 
 def get_user_agent():
@@ -25,7 +24,8 @@ class CityRadius:
      
     @cityRadiusData.setter
     def cityRadiusData(self,vals):  
-        '''creates local (instance)) city radius dictionary with item id key based on data from database ''' 
+        '''creates local (instance)) city radius dictionary with item id key based on data from database 
+        cityRadius data  = [city : str,cityradius :int]''' 
         radiusData = {}
         prop,listOfIDs = vals
         if listOfIDs != []:
@@ -33,7 +33,6 @@ class CityRadius:
                 try:
                     r = list(prop.objects().filter(id=id).values_list('city','cityRadius'))
                     radiusData[id] = r[0]
-                    # radiusData[id] = getValuesListByID(prop, id,'city','cityRadius')
                 except: IndexError # data does not exist 
         self._cityRadiusData = radiusData
     
@@ -45,25 +44,6 @@ class CityRadius:
                 return self.cityRadiusData[id][1]
         else:
             return queryRadius
-        
-    # def addData(self,property,listOfIDs):
-    #     '''adds entry to local (instance) city radius dictionary '''         
-    #     if listOfIDs == []:
-    #         return
-    #     for id in listOfIDs:
-    #         if id in self.cityRadiusData:
-    #             continue
-
-    #         try:
-    #             r = list(property.objects().filter(id=id).values_list('city','cityRadius'))
-    #             self.cityRadiusData[id] = r[0]
-    #             # self.cityRadiusData[id] = getValuesListByID(property, id,'city','cityRadius') 
-    #         except: IndexError
-
-
-# def getValuesListByID(obj, id,*args):
-#     l = list(obj.objects().filter(id=id).values_list(*args))
-#     return l[0] 
 
 @dataclass
 class QueryData:
@@ -170,70 +150,7 @@ class Scraper:
         if self.endless_scroll:
             self.perform_endless_scroll(driver)
         return driver.page_source
-    
-    # def scrapeData(self,**kwargs):
-    #     data =[]
-    #     listOfIDs =[]
-    #     while(True):
-    #         # get page source and createt html object
-    #         pageSource = self.get()
-    #         html_obj = HTML(html = pageSource)
-    #         # look only for organic list, skip promoted ones
-    #         listOrganic = html_obj.find("[data-cy='search.listing.organic']")
-    #         # check if the page contains data, if not - finish loop 
-    #         if listOrganic == []: 
-    #             break
-    #         items = listOrganic[0].find("[data-cy='listing-item']")
-
-
-    #         for item in items:
-
-    #             # init data
-    #             dataset ={}
-    #             row=[]
-    #             # get id
-    #             ahref = item.find("[data-cy='listing-item-link']",first=True).attrs["href"]
-    #             id = re.search("(?<=-ID){1}(.+)", ahref).group()
-    #             # get title
-    #             try:
-    #                 title = item.find("article>p",first= True).element.text_content()
-    #             except:
-    #                 continue
-    #         #     print(title)
-    #             row.append(title)
-
-    #             #get rest of the data from spans
-    #             articles = item.find("article")
-    #             for article in articles:
-    #                 spans = article.find("div>span")
-    #                 for span in spans:
-    #                     content =""
-    #                     try:
-    #                         content = span.element.text_content()
-    #                     except:
-
-    #                         pass
-
-    #                     if content !="":
-    #                         _content = content.strip()
-    #                         row.append(_content)
-
-    #                 try:
-    #                     dataset["id"]=id
-    #                     dataset["title"]=title
-    #                     dataset["city"] = self.query.city
-    #                     dataset["cityRadius"]  = self.query.cityRadius
-    #                     dataset["propertyType"]=self.query.propertyType
-    #                     dataset["price"] = float(row[1].split("\xa0zł")[0].replace("\xa0",""))
-    #                     dataset["size"] = float(row[4].split(" m²")[0])
-    #                     data.append(dataset)
-    #                     listOfIDs.append(id)
-    #                 except ValueError:
-    #                     continue
-    #         self.query.queryUpdate()
-    #     return data ,listOfIDs
-    
-
+ 
     def checkNewScrapedData(self):
         '''checks if new scraped data are empty'''
         return self.newScrapedData == [] and self.newScrapedListOfIDs ==[]
@@ -311,27 +228,3 @@ class Scraper:
             id = self.scrapedListOfIDs[i]
             self.scrapedData[i]["cityRadius"] = cityRadius.getEntryData(id,self.scrapedData[i]["city"],self.scrapedData[i]["cityRadius"])
         
-# def multipleScrape(propertyType,city,radiusTuple,price,propertyModel):
-    
-#     for radius in radiusTuple:
-#         # create query
-#         query =QueryData(propertyType,city,radius,price)
-#         query.createUrl()
-#         # create scraper
-#         scraper = Scraper(query,True)
-#         # scrape 
-#         data,listOfIDs = scraper.scrapeData()
-#         # get radius data from cassandra
-#         cityRadius = CityRadius(property=propertyModel,listOfIDs=listOfIDs)     
-
-#         # update radius if it was already in database 
-#         for i in range(len(data)):
-#             id = listOfIDs[i]
-#             data[i]["cityRadius"] = cityRadius.getEntryData(id,data[i]["city"],data[i]["cityRadius"])
-        
-#         # put data in database 
-#         for d in data:
-#             newData =d.copy()
-#             newData["date"]=date.today()
-#             newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
-#             create_entry(newData)

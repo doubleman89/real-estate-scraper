@@ -27,13 +27,11 @@ class PropertyRadiusListSchema(BaseModel):
 class PropertyScrapeEventSchema(BaseModel):
     uuid: UUID
     id: str
-    title : Optional[str]
     price_str : Optional[str]
     propertyType : Optional[str]
 
 
 class PropertyScrapeEventDetailSchema(BaseModel):
-    title : Optional[str]
     price_str : Optional[str]
     datetime : Optional[datetime]
     created : Optional[Any] = None

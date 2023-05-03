@@ -52,14 +52,7 @@ def events_scrape_list_view(data: schema.PropertyListSchema):
 def property_detail_view(id):
     data = dict(propertyModel.objects.get(id=id) )
     events = list(propertyScrapeEvent.objects().filter(id=id).limit(5))
-    # time = []
-    # for i in range(len(events)):
-    #     event = events[i]
-    #     print(type(event))
-    #     time.append(datetime_from_uuid1(event["uuid"]))
     events = [schema.PropertyScrapeEventDetailSchema(**x) for x in events]
-    # for i in range(len(events)):
-    #     setattr(events[i], "datetime", time[i])
     data["events"]= events
     data["events_url"] = f"/properties/{id}/events"
     return data
@@ -73,25 +66,4 @@ def property_scrapes_detail_view(id):
 
 # @app.get("/scrape/?={city}?={propertyType}?={radius}?={price}")
 # def scrape(city, propertyType,radius,price):
-#     multipleScrape(propertyType,city,(radius,),price)
-    # # create query
-    # query =QueryData(propertyType,city,radius,price)
-    # query.createUrl()
-    # # create scraper
-    # scraper = Scraper(query,True)
-    # # scrape 
-    # data,listOfIDs = scraper.scrapeData()
-    # # get radius data from cassandra
-    # cityRadius = CityRadius(property=property,listOfIDs=listOfIDs)     
 
-    # # update radius if it was already in database 
-    # for i in range(len(data)):
-    #     id = listOfIDs[i]
-    #     data[i]["cityRadius"] = cityRadius.getEntryData(id,data[i]["city"],data[i]["cityRadius"])
-    
-    # # put data in database 
-    # for d in data:
-    #     newData =d.copy()
-    #     newData["date"]=date.today()
-    #     newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
-    #     crud.create_entry(newData)

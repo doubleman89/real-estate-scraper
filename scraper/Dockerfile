@@ -1,7 +1,10 @@
+################### VER 1 of Docker ########################
 FROM redis:alpine3.17
 
 CMD ["redis-server"]
 
+
+################### VER 2 of Docker (Compose) ########################
 # FROM python:3.10.4-slim
 # WORKDIR /usr/src/app/scraper
 

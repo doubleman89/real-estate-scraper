@@ -24,7 +24,7 @@ class PropertyScrapeEvent(Model): #-> table
     __keyspace__ = "scraper_app"
     uuid=columns.UUID(primary_key=True)
     id = columns.Text(index=True)
-    title : str = columns.Text()
+    date = columns.Date(index=True)
     city : str = columns.Text()
     cityRadius = columns.Integer()
     propertyType = columns.Integer()
