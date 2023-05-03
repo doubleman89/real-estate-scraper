@@ -2,18 +2,27 @@ from pydantic import BaseModel,root_validator
 from uuid import UUID
 from typing import Optional, Any
 
-from datetime import datetime
+from datetime import date,datetime
 from cassandra.util import datetime_from_uuid1
 
 
 class PropertySchema(BaseModel):
     id: str
+    date :date
     title : Optional[str]
-    price_str : Optional[str]
+    city : str
+    cityRadius : int 
+    propertyType : int 
+    price : float
 
 class PropertyListSchema(BaseModel):
     id: str
     title : Optional[str]
+
+class PropertyRadiusListSchema(BaseModel):
+    id: str
+    city : str
+    cityRadius :int
 
 class PropertyScrapeEventSchema(BaseModel):
     uuid: UUID

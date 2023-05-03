@@ -1,8 +1,11 @@
 import uuid
-from models import Property,PropertyScrapeEvent
+from models import PropertyModel,PropertyScrapeEvent
+from datetime import datetime,date
 
 def create_entry(data:dict):
-    return Property.create(**data)
+    newData =data.copy()
+    newData["date"] = date.today()
+    return PropertyModel.create(**data)
 
 
 def create_scrape_entry(data:dict):

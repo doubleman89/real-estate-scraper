@@ -5,8 +5,18 @@ services:
     build: './'
     links:
       - redis
+    ports:
+      - '8888:8888'
+
+    environment:
+      - JUPYTER_TOKEN=hi
+
+    volumes:
+      - ../jupyter/:/usr/src/app/jupyter
 
   redis:
     image: 'redis:alpine3.17'
     ports:
       - '6379:6379'
+
+

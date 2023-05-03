@@ -1,19 +1,21 @@
 from cassandra.cqlengine import columns
 from cassandra.cqlengine.models import Model
-from cassandra.util import datetime_from_uuid1
-
 
 
 
 
 # List View -> Detail View
 
-class Property(Model): #-> table
+class PropertyModel(Model): #-> table
     __keyspace__ = "scraper_app"
     id = columns.Text(primary_key = True,required=True)
-    propertyType = columns.Text()
+    date = columns.Date(primary_key= True)
     title : str = columns.Text()
-    price_str = columns.Text(default ="0.0")
+    city : str = columns.Text(index=True)
+    cityRadius = columns.Integer(index=True)
+    propertyType = columns.Integer(index=True)
+    price = columns.Float(default ="0.0",index=True)
+    size = columns.Float(index=True)
 
 
 
@@ -22,13 +24,15 @@ class PropertyScrapeEvent(Model): #-> table
     __keyspace__ = "scraper_app"
     uuid=columns.UUID(primary_key=True)
     id = columns.Text(index=True)
-    propertyType = columns.Text()
     title : str = columns.Text()
-    price_str = columns.Text(default ="0.0")
+    city : str = columns.Text()
+    cityRadius = columns.Integer()
+    propertyType = columns.Integer()
+    price = columns.Float(default ="0.0")
+    size = columns.Float()
 
-
-data ={
-    "id":"454",
-    "title":"dupa",
-    "propertyType":"dziura"
-}
+class Radius(Model):
+    __keyspace__ = "scraper_app"
+    id = columns.Text(primary_key = True,required=True)
+    city : str = columns.Text()
+    cityRadius = columns.Text()

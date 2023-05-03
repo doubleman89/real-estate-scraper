@@ -11,7 +11,7 @@ CMD ["redis-server"]
 
 # # copy requirements and install (so that changes to files do not mean rebuild cannot be cached)
 # COPY requirements.txt /usr/src/app
-# RUN pip install -r requirements.txt
+# RUN pip install -r /usr/src/app/requirements.txt
 
 # # copy all files into the container
 # COPY . /usr/src/app/scraper
