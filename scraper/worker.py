@@ -47,8 +47,10 @@ redisInUse = False
 celery_app = Celery(__name__)
 settings = config.get_settings()
 if redisInUse == False:
-    BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
-    RESULT_BACKEND = 'rpc://myuser:mypassword@localhost:5672/myvhost'
+    # BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
+    BROKER_URL = 'amqp://myuser:mypassword@rabbitmq:5672/myvhost'
+    # RESULT_BACKEND = 'rpc://myuser:mypassword@localhost:5672/myvhost'
+    RESULT_BACKEND = 'rpc://myuser:mypassword@rabbitmq:5672/myvhost'
 elif celeryDockerInUse:
     BROKER_URL = "redis://redis:6379/0" # docker compose setting - celery & reids
     RESULT_BACKEND = BROKER_URL
@@ -59,24 +61,24 @@ celery_app.conf.broker_url =   BROKER_URL
 celery_app.conf.result_backend =   RESULT_BACKEND
 celery_app.conf.enable_utc = True
 celery_app.conf.timezone = "Europe/Warsaw" #change to your timezone 
-celery_app.conf.broker_connection_max_retries =  10
+celery_app.conf.broker_connection_max_retries =  30
 
 
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour=9, minute=12, day_of_week="*/1"),
+        crontab(hour=00, minute=5, day_of_week="*/1"),
         scrape_properties.s(20,"poznan",(0,5,10,15),None)
     ),
     # get semi-detached houses data for poznan
     sender.add_periodic_task(
-        crontab(hour=9, minute=20, day_of_week="*/1"),
+        crontab(hour=0, minute=20, day_of_week="*/1"),
         scrape_properties.s(21,"poznan",(0,5,10,15),None)
     ),
     # get area data for poznan 
     sender.add_periodic_task(
-        crontab(hour=13, minute=32, day_of_week="*/1"),
+        crontab(hour=0, minute=35, day_of_week="*/1"),
         scrape_properties.s(30,"poznan",(0,5,10,15),None)
     ),
 
@@ -84,12 +86,10 @@ def setup_periodic_tasks(sender, **kwargs):
 def scrape_property(scraper_id):
     s = scraper.Scraper.objects[scraper_id]
     s.scrapeSinglePage()
-    logger.info("Scraped")
+    # logger.info("Scraped")
 
 @celery_app.task
 def scrape_properties(propertyType,city,radiusTuple,price):
-    #already in DB 
-    entriesInDB = []
     # create query
     query =scraper.QueryData(propertyType,city,0,price)
     logger.info(query)
@@ -119,8 +119,8 @@ def scrape_properties(propertyType,city,radiusTuple,price):
             newData["date"]=date.today()
             newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
             create_entry(newData)
-            logger.info(newData)
-            print(newData)
+            # logger.info(newData)
+            # print(newData)
     # close agent
     s.driver.quit()
     

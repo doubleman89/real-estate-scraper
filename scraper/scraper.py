@@ -141,7 +141,11 @@ class Scraper:
             options.add_argument("--headless=new")
             options.add_argument("user-agent={user_agent}")
             options.add_argument('--disable-gpu')
-            self.driver = webdriver.Chrome()
+            options.add_argument("--disable-dev-shm-usage")
+            # options.add_argument('--disable-extensions')
+            # options.add_argument('--disable-setuid-sandbox')
+            options.add_argument('--remote-debugging-port=9222')
+            self.driver = webdriver.Chrome(options=options)
         return self.driver
     
     def perform_endless_scroll(self,driver):

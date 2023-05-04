@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Create Rabbitmq user
-( rabbitmqctl wait --timeout 60 $RABBITMQ_PID_FILE ; \
+(  rabbitmqctl wait --timeout 60 $RABBITMQ_PID_FILE ; \
 rabbitmqctl add_user $RABBITMQ_USER $RABBITMQ_PASSWORD 2>/dev/null ; \
 rabbitmqctl add_vhost  $RABBITMQ_VHOST 2>/dev/null ; \
 rabbitmqctl set_user_tags $RABBITMQ_USER administrator ; \
