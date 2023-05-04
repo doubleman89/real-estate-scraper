@@ -1,5 +1,5 @@
 celery
-redis
+#redis
 celery
 cassandra-driver
 fastapi
@@ -8,3 +8,4 @@ fake-useragent
 selenium
 requests_html
 notebook
+#rabbitmq

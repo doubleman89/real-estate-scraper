@@ -47,12 +47,48 @@ class CityRadius:
 
 @dataclass
 class QueryData:
+
+    textDataDict ={
+            "mieszkanie":[""],
+            "dom":["DETACHED","SEMI_DETACHED","RIBBON"],
+            "dzialka":["BUILDING"]
+        }
+
+
     propertyType : int
-    city : str
-    cityRadius: int        
+    city : str = field(default="")    
+    cityRadius: int  = field(default=0)      
     price : float = field(default=None)
     pageNo : int = field(init=False,default = 1)
     url : str = field(init=False,default = "")
+
+    @property
+    def propertyType(self):
+        return self._propertyType
+    
+    @propertyType.setter
+    def propertyType(self,val):
+        self._propertyType = val
+
+        #setting private values related with property type
+        self._propertyTypeOverall = val//10
+        match self._propertyTypeOverall:  
+            case 1 : 
+                self._propertyTypeText =  "mieszkanie"  
+                self._propertyTypeTextDetailed = QueryData.textDataDict[self._propertyTypeText][val%10]
+                self._queryPropertyTypeDetailsText =""        
+            case 2 : 
+                self._propertyTypeText =  "dom"
+                self._propertyTypeTextDetailed = QueryData.textDataDict[self._propertyTypeText][val%10]
+                self._queryPropertyTypeDetailsText = "&buildingType=["+self._propertyTypeTextDetailed+"]"  
+            case 3 : 
+                self._propertyTypeText =  "dzialka"
+                self._propertyTypeTextDetailed = QueryData.textDataDict[self._propertyTypeText][val%10]
+                self._queryPropertyTypeDetailsText = "&plotType="+self._propertyTypeTextDetailed
+
+        
+        
+
 
     def __post__init(self):
         self.url : str = self.createUrl()
@@ -68,32 +104,6 @@ class QueryData:
     def queryCity(self):
         return f"{self.city}?distanceRadius={self.cityRadius}"
 
-    def queryPropertyType(self):
-
-        textDataDict ={
-            "mieszkanie":[""],
-            "dom":["DETACHED","SEMI_DETACHED","RIBBON"],
-            "dzialka":["BULDING"]
-        }
-
-        match self.propertyType//10:  
-            case 1 : 
-                propertyTypeText =  "mieszkanie" 
-                queryText =""               
-            case 2 : 
-                propertyTypeText =  "dom"
-                queryText = "&buildingType="+textDataDict[propertyTypeText][self.propertyType%10]
-            case 3 : 
-                propertyTypeText =  "dzialka"
-                queryText = "&plotType="+textDataDict[propertyTypeText][self.propertyType%10]
-            case _ :
-                raise ValueError("Wrong property type")
-        try:
-            return (propertyTypeText,queryText)
-        except ValueError or IndexError:
-            print("Wrong property type")
-    
-
     
     def queryUpdate(self):
         self.pageNo+=1
@@ -101,8 +111,8 @@ class QueryData:
            
     
     def createUrl(self): 
-        queryPropertyType = self.queryPropertyType()[0]
-        queryPropertyTypeDetais = self.queryPropertyType()[1]
+        queryPropertyType = self._propertyTypeText #self.queryPropertyType()[0]
+        queryPropertyTypeDetais = self._queryPropertyTypeDetailsText  #self.queryPropertyType()[1]      
         url = f'https://www.otodom.pl/pl/oferty/sprzedaz/{queryPropertyType}/{self.queryCity()}&{self.queryPage()}&limit=72&ownerTypeSingleSelect=ALL{queryPropertyTypeDetais}&direction=DESC&viewType=listing{self.queryPriceMax()}'
         return url
     
@@ -130,6 +140,7 @@ class Scraper:
             options.add_argument("--no-sandbox")
             options.add_argument("--headless=new")
             options.add_argument("user-agent={user_agent}")
+            options.add_argument('--disable-gpu')
             self.driver = webdriver.Chrome()
         return self.driver
     
@@ -209,7 +220,10 @@ class Scraper:
                     dataset["cityRadius"]  = self.query.cityRadius
                     dataset["propertyType"]=self.query.propertyType
                     dataset["price"] = float(row[1].split("\xa0zł")[0].replace("\xa0",""))
-                    dataset["size"] = float(row[4].split(" m²")[0])
+                    if self.query._propertyTypeText ==  "dzialka":
+                        dataset["size"] = float(row[3].split(" m²")[0])
+                    else: 
+                        dataset["size"] = float(row[4].split(" m²")[0])
                     data.append(dataset)
                     listOfIDs.append(id)
                 except ValueError:

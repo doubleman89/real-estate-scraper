@@ -4,7 +4,7 @@ services:
   worker:
     build: './'
     links:
-      - redis
+      - rabbitmq
     ports:
       - '8888:8888'
 
@@ -14,9 +14,26 @@ services:
     volumes:
       - ../jupyter/:/usr/src/app/jupyter
 
-  redis:
-    image: 'redis:alpine3.17'
+  # redis:
+  #   image: 'redis:alpine3.17'
+  #   ports:
+  #     - '6379:6379'
+
+  rabbitmq:
+    image: 'rabbitmq:3.10.20-alpine'
+    environment:
+      - RABBITMQ_USER=myuser
+      - RABBITMQ_PASSWORD=mypassword
+      - RABBITMQ_VHOST=myvhost
+      - RABBITMQ_PID_FILE = /var/lib/rabbitmq/mnesia/rabbitmq
+
     ports:
-      - '6379:6379'
+      -'5672:5672'
+    command: 
+      sh -c "add init.sh /init.sh &&
+      run chmod +x /init.sh &&
+      /init.sh"
+
+      
 
 

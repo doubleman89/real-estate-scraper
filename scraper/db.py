@@ -31,6 +31,7 @@ def get_cluster():
     return cluster
 
 def get_session():
+
     cluster = get_cluster()
     session = cluster.connect()
     register_connection(str(session),session=session)
