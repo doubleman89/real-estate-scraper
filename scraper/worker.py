@@ -48,15 +48,17 @@ celery_app = Celery(__name__)
 settings = config.get_settings()
 if redisInUse == False:
     # BROKER_URL = 'amqp://myuser:mypassword@localhost:5672/myvhost'
-    BROKER_URL = 'amqp://myuser:mypassword@rabbitmq:5672/myvhost'
+    # BROKER_URL = 'amqp://myuser:mypassword@rabbitmq:5672/myvhost'
+    BROKER_URL = settings.rabbitmq_url
     # RESULT_BACKEND = 'rpc://myuser:mypassword@localhost:5672/myvhost'
-    RESULT_BACKEND = 'rpc://myuser:mypassword@rabbitmq:5672/myvhost'
-elif celeryDockerInUse:
-    BROKER_URL = "redis://redis:6379/0" # docker compose setting - celery & reids
-    RESULT_BACKEND = BROKER_URL
-else:
-    BROKER_URL = settings.redis_url #docker containter setting - redis
-    RESULT_BACKEND = BROKER_URL
+    # RESULT_BACKEND = 'rpc://myuser:mypassword@rabbitmq:5672/myvhost'
+    RESULT_BACKEND = settings.rabbitmq_backend
+# elif celeryDockerInUse:
+#     BROKER_URL = "redis://redis:6379/0" # docker compose setting - celery & reids
+#     RESULT_BACKEND = BROKER_URL
+# else:
+#     BROKER_URL = settings.redis_url #docker containter setting - redis
+#     RESULT_BACKEND = BROKER_URL
 celery_app.conf.broker_url =   BROKER_URL
 celery_app.conf.result_backend =   RESULT_BACKEND
 celery_app.conf.enable_utc = True
@@ -68,33 +70,54 @@ celery_app.conf.broker_connection_max_retries =  30
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour=00, minute=5, day_of_week="*/1"),
+        crontab(hour=0, minute=15, day_of_week="*/1"),
         scrape_properties.s(20,"poznan",(0,5,10,15),None)
     ),
     # get semi-detached houses data for poznan
     sender.add_periodic_task(
-        crontab(hour=0, minute=20, day_of_week="*/1"),
+        crontab(hour=0, minute=30, day_of_week="*/1"),
         scrape_properties.s(21,"poznan",(0,5,10,15),None)
     ),
     # get area data for poznan 
     sender.add_periodic_task(
-        crontab(hour=0, minute=35, day_of_week="*/1"),
+        crontab(hour=0, minute=45, day_of_week="*/1"),
         scrape_properties.s(30,"poznan",(0,5,10,15),None)
     ),
+
+# memory  for scraper objects 
+# celeryObjects = {}
 
 @celery_app.task
 def scrape_property(scraper_id):
     s = scraper.Scraper.objects[scraper_id]
+    # s = celeryObjects[scraper_id]
     s.scrapeSinglePage()
     # logger.info("Scraped")
 
 @celery_app.task
+def transfer_data(radius,scrapedData):
+    # put data in database 
+    for d in scrapedData:
+        #create new entry only for specific radius, in case of other city radius - skip 
+        if d["cityRadius"] != radius:
+            continue
+        newData =d.copy()
+        newData["date"]=date.today()
+        newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
+        create_entry(newData)
+        # logger.info(newData)
+    logger.info("transferred")
+
+
+@celery_app.task
 def scrape_properties(propertyType,city,radiusTuple,price):
+
     # create query
     query =scraper.QueryData(propertyType,city,0,price)
     logger.info(query)
     # create scraper
     s = scraper.Scraper(query,True)
+    # celeryObjects[id(s)]= s
     for radius in radiusTuple:
         # init query data for every radius 
         s.query.cityRadius = radius
@@ -111,16 +134,17 @@ def scrape_properties(propertyType,city,radiusTuple,price):
         s.radiusUpdate(property=propertyModel)
  
         # put data in database 
-        for d in s.scrapedData:
-            #create new entry only for specific radius, in case of other city radius - skip 
-            if d["cityRadius"] != radius:
-                continue
-            newData =d.copy()
-            newData["date"]=date.today()
-            newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
-            create_entry(newData)
-            # logger.info(newData)
-            # print(newData)
+        transfer_data.delay(radius,scrapedData=s.scrapedData)
+        # for d in s.scrapedData:
+        #     #create new entry only for specific radius, in case of other city radius - skip 
+        #     if d["cityRadius"] != radius:
+        #         continue
+        #     newData =d.copy()
+        #     newData["date"]=date.today()
+        #     newData["title"] = newData["title"].encode("utf-8","ignore").decode("utf-8")
+        #     create_entry(newData)
+        #     logger.info(newData)
+        #     # print(newData)
     # close agent
     s.driver.quit()
     

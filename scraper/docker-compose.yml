@@ -44,7 +44,8 @@ services:
        - rabbitmq
     ports:
       - '8888:8888'
-
+    env_file:
+      - ./.env
     environment:
       JUPYTER_TOKEN: hi
             # NOTE: Below we are using 127.0.0.1 because this container
@@ -54,7 +55,6 @@ services:
       # connect using the service name like following:
       # amqp:rabbitmq_server:5672
       rabbitmq_uri: amqp:rabbitmq:5672 #amqp://127.0.0.1:5672
-
     volumes:
       - ../jupyter/:/usr/src/app/jupyter\
     # Make it wait for rabbitmq deployment
@@ -63,6 +63,18 @@ services:
       #   condition: service_completed_successfully
       rabbitmq:
         condition: service_healthy
+    restart: always
+  flower:
+    build:
+      dockerfile: Dockerfile
+    command: /usr/src/app/scraper/start-flower.sh
+    env_file:
+      - ./.env
+    ports:
+      - 5555:5555
+    depends_on:
+      - worker
+      - rabbitmq
     restart: always
 
 

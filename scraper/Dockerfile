@@ -30,6 +30,11 @@ COPY . /usr/src/app/scraper
 # needs to be set else Celery gives an error (because docker runs commands inside container as root)
 ENV C_FORCE_ROOT=1
 
+
+COPY ./scripts/start_flower.sh /usr/src/app/scraper/start-flower.sh
+RUN sed -i 's/\r$//g' /usr/src/app/scraper/start-flower.sh
+RUN chmod +x /usr/src/app/scraper/start-flower.sh
+
 # run supervisord
 CMD ["/usr/bin/supervisord"]
 

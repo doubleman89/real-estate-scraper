@@ -1,6 +1,5 @@
 celery
 #redis
-celery
 cassandra-driver
 fastapi
 python-dotenv
@@ -8,4 +7,5 @@ fake-useragent
 selenium
 requests_html
 notebook
+flower
 #rabbitmq

@@ -15,8 +15,6 @@ propertyModel = models.PropertyModel
 propertyScrapeEvent = models.PropertyScrapeEvent
 radius = models.Radius
 
-
-
 @app.on_event("startup")
 def on_startup():
     global session

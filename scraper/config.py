@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     name : str = Field (...,env="PROJ_NAME")
     db_client_id : str = Field(...,env= "ASTRA_DB_CLIENT_ID")
     db_client_secret : str = Field(...,env= "ASTRA_DB_CLIENT_SECRET")
-    redis_url : str = Field(...,env= "REDIS_URL")
+    # redis_url : str = Field(...,env= "REDIS_URL")
+    rabbitmq_url : str = Field(...,env ="RABBITMQ_URL")
+    rabbitmq_backend : str = Field(...,env ="RABBITMQ_BACKEND")
 
     
     class Config:
