@@ -123,12 +123,21 @@ def scrape_properties(propertyType,city,radiusTuple,price):
         s.query.cityRadius = radius
         s.query.pageNo = 1
 
+
         while(True):
             scrape_property(scraper_id=id(s))
             # check if scrapping is done 
             if s.checkNewScrapedData():
-                break
-            s.query.queryUpdate()
+                # check if there can be scrapped another age range
+                updateAge = s.query.updateAge()
+                if updateAge:
+                    pass
+                else:
+                    break
+            else:
+                s.query.queryUpdate()
+            
+
  
         # # update radius if it was already in database 
         s.radiusUpdate(property=propertyModel)

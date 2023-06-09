@@ -5,8 +5,6 @@ services:
     # image: 'rabbitmq:3.10-management-alpine'
     build:
       dockerfile: Dockerfile-rabbitmq
-
-
     ports:
       # Expose the port for the worker to add/get tasks
       - 5672:5672
@@ -40,10 +38,12 @@ services:
   worker:
     build: 
       dockerfile: Dockerfile
+      shm_size: '8gb'
     links:
        - rabbitmq
     ports:
       - '8888:8888'
+      - 5555:5555
     env_file:
       - ./.env
     environment:
@@ -64,18 +64,18 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: always
-  flower:
-    build:
-      dockerfile: Dockerfile
-    command: /usr/src/app/scraper/start-flower.sh
-    env_file:
-      - ./.env
-    ports:
-      - 5555:5555
-    depends_on:
-      - worker
-      - rabbitmq
-    restart: always
+  # flower:
+  #   build:
+  #     dockerfile: Dockerfile
+  #   command: /usr/src/app/scraper/start-flower.sh
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - 5555:5555
+  #   depends_on:
+  #     - worker
+  #     - rabbitmq
+  #   restart: always
 
 
 

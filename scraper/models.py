@@ -16,6 +16,7 @@ class PropertyModel(Model): #-> table
     propertyType = columns.Integer(index=True)
     price = columns.Float(default ="0.0",index=True)
     size = columns.Float(index=True)
+    age =columns.Integer(index = True)
 
 
 

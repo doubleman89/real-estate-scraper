@@ -44,7 +44,6 @@ RUN chmod +x /usr/src/app/scraper/start-flower.sh
 CMD ["/usr/bin/supervisord"]
 
 
-
 ################### VER 3 of Docker ########################
 # FROM rabbitmq:3.10.20-alpine
 

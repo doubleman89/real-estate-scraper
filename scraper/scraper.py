@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.webdriver import WebDriver
 from dataclasses import dataclass,field
 from time import sleep
+from datetime import date
 import re
 from requests_html import HTML
 
@@ -48,20 +49,63 @@ class CityRadius:
 @dataclass
 class QueryData:
 
+    def createQueryAgeList():
+        #define ranges 
+        r1 = [i for i in range (0,10,1)]
+        r2 = [i for i in range (10,20,2)]
+        r3 =  [i for i in range (20,30,5)]
+        r4 =[30]
+        return r1+r2+r3+r4
+    
+    queryAgeList = createQueryAgeList()
+
     textDataDict ={
             "mieszkanie":[""],
             "dom":["DETACHED","SEMI_DETACHED","RIBBON"],
             "dzialka":["BUILDING"]
         }
-
-
+    
     propertyType : int
     city : str = field(default="")    
     cityRadius: int  = field(default=0)      
     price : float = field(default=None)
     pageNo : int = field(init=False,default = 1)
-    url : str = field(init=False,default = "")
 
+    def __post_init__(self):
+        self.setAge(0)
+        self.url : str = self.createUrl()
+    
+    def getAge(self):
+        return self._age
+    
+    def setAge(self,queryAgeListIndex):
+        """sets age with corresponding value from queryAgeList according to
+        provided List Index parameter"""
+        self._queryAgeListIndex = queryAgeListIndex
+        self._age = QueryData.queryAgeList[self._queryAgeListIndex]
+        
+    
+
+    def updateAge(self):
+        """
+        Increments/initialize Age 
+        returns True if it was incremented
+        returns False it was reseted"""
+        if  self._queryAgeListIndex +1 < len(QueryData.queryAgeList):
+            self.setAge(self._queryAgeListIndex+1)
+            self.pageNo = 1
+            self.url = self.createUrl()
+            return True
+        else:
+            self.setAge(0)
+            return False
+    def getQueryAgeRange(self):       
+        try:
+            return  QueryData.queryAgeList[self._queryAgeListIndex+1] - self.getAge()
+        except IndexError:
+            return -1 
+
+        
     @property
     def propertyType(self):
         return self._propertyType
@@ -85,25 +129,6 @@ class QueryData:
                 self._propertyTypeText =  "dzialka"
                 self._propertyTypeTextDetailed = QueryData.textDataDict[self._propertyTypeText][val%10]
                 self._queryPropertyTypeDetailsText = "&plotType="+self._propertyTypeTextDetailed
-
-        
-        
-
-
-    def __post__init(self):
-        self.url : str = self.createUrl()
-    
-    def queryPage(self):
-        return f"page={self.pageNo}"
-    
-    def queryPriceMax(self): 
-        if self.price is None : 
-            return ""
-        return f"&priceMax={self.price}"
-    
-    def queryCity(self):
-        return f"{self.city}?distanceRadius={self.cityRadius}"
-
     
     def queryUpdate(self):
         self.pageNo+=1
@@ -111,10 +136,38 @@ class QueryData:
            
     
     def createUrl(self): 
+        def queryPage():
+            return f"page={self.pageNo}"
+    
+        def queryPriceMax(): 
+            if self.price is None : 
+                return ""
+            return f"&priceMax={self.price}"
+        
+        def queryCity():
+            return f"{self.city}?distanceRadius={self.cityRadius}"
+        
+        def queryAge():
+            age = self.getAge()
+            if age == -1 :
+                return ""
+            queryRange = self.getQueryAgeRange()  
+            maxAge = date.today().year - age
+
+            if range !=-1 :
+                minAge = maxAge-queryRange
+                minAgeText =f"&buildYearMin= {minAge} "
+            else:
+                minAgeText =""
+
+            return f"{minAgeText}&buildYearMax={maxAge}"
+        
         queryPropertyType = self._propertyTypeText #self.queryPropertyType()[0]
         queryPropertyTypeDetais = self._queryPropertyTypeDetailsText  #self.queryPropertyType()[1]      
-        url = f'https://www.otodom.pl/pl/oferty/sprzedaz/{queryPropertyType}/{self.queryCity()}&{self.queryPage()}&limit=72&ownerTypeSingleSelect=ALL{queryPropertyTypeDetais}&direction=DESC&viewType=listing{self.queryPriceMax()}'
+        url = f'https://www.otodom.pl/pl/oferty/sprzedaz/{queryPropertyType}/{queryCity()}&{queryPage()}&limit=72&ownerTypeSingleSelect=ALL{queryAge()}{queryPropertyTypeDetais}&direction=DESC&viewType=listing{queryPriceMax()}'
         return url
+    
+
     
     def __str__(self):
         return self.url
@@ -140,7 +193,7 @@ class Scraper:
             options.add_argument("--no-sandbox")
             options.add_argument("--headless=new")
             options.add_argument("user-agent={user_agent}")
-            options.add_argument('--disable-gpu')
+            # options.add_argument('--disable-gpu')
             options.add_argument("--disable-dev-shm-usage")
             # options.add_argument('--disable-extensions')
             # options.add_argument('--disable-setuid-sandbox')
@@ -224,6 +277,7 @@ class Scraper:
                     dataset["cityRadius"]  = self.query.cityRadius
                     dataset["propertyType"]=self.query.propertyType
                     dataset["price"] = float(row[1].split("\xa0zł")[0].replace("\xa0",""))
+                    dataset["age"] = self.query.getAge()
                     if self.query._propertyTypeText ==  "dzialka":
                         dataset["size"] = float(row[3].split(" m²")[0])
                     else: 
