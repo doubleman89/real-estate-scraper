@@ -1,0 +1,95 @@
+version: "2"
+services:
+
+  rabbitmq:
+    # image: 'rabbitmq:3.10-management-alpine'
+    build:
+      dockerfile: Dockerfile-rabbitmq
+    ports:
+      # Expose the port for the worker to add/get tasks
+      - 5672:5672
+      # OPTIONAL: Expose the GUI port
+      - 15672:15672
+    volumes: 
+    #   - ./:/scripts
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    # command: 
+    #   # - sh -c "chmod +x scripts/init.sh"
+      # - scripts/init_rabbit.sh
+    healthcheck:
+      test: "/opt/rabbitmq/sbin/rabbitmqctl status"
+      interval: 2s
+      timeout: 30s
+      retries: 15
+    
+
+
+  # rabbitmq-init:
+  #   image: 'rabbitmq:3.10-management-alpine'
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   volumes: 
+  #     - ./:/scripts
+  #   command: 
+  #     # - sh -c "chmod +x scripts/init.sh"
+  #     - scripts/init_rabbit.sh
+  worker:
+    build: 
+      dockerfile: Dockerfile
+      shm_size: '8gb'
+    links:
+       - rabbitmq
+    ports:
+      - '8888:8888'
+      - 5555:5555
+    env_file:
+      - ./.env
+    environment:
+      JUPYTER_TOKEN: hi
+            # NOTE: Below we are using 127.0.0.1 because this container
+      # will run on the host network, thus it will have access to the
+      # host network.
+      # If it would not have run locally, we would have had to
+      # connect using the service name like following:
+      # amqp:rabbitmq_server:5672
+      rabbitmq_uri: amqp:rabbitmq:5672 #amqp://127.0.0.1:5672
+    volumes:
+      - ../jupyter/:/usr/src/app/jupyter\
+    # Make it wait for rabbitmq deployment
+    depends_on: 
+      # rabbitmq-init:
+      #   condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    restart: always
+  # flower:
+  #   build:
+  #     dockerfile: Dockerfile
+  #   command: /usr/src/app/scraper/start-flower.sh
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - 5555:5555
+  #   depends_on:
+  #     - worker
+  #     - rabbitmq
+  #   restart: always
+
+
+
+  # redis:
+  #   image: 'redis:alpine3.17'
+  #   ports:
+  #     - '6379:6379'
+
+
+
+
+# networks:
+#   rabbitmq_go_net:
+#     driver: bridge
+      
+
+

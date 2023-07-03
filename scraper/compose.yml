@@ -1,0 +1,64 @@
+services:
+  rabbitmq:
+    # image: 'rabbitmq:3.10-management-alpine'
+    image: doubleman89/scraper-rabbitmq
+    build:
+      dockerfile: Dockerfile-rabbitmq
+    ports:
+      # Expose the port for the worker to add/get tasks
+      - 5672:5672
+      # OPTIONAL: Expose the GUI port
+      - 15672:15672
+    # volumes: 
+    # #   - ./:/scripts
+    #   - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+    #   - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    # command: 
+    #   # - sh -c "chmod +x scripts/init.sh"
+      # - scripts/init_rabbit.sh
+    healthcheck:
+      test: "/opt/rabbitmq/sbin/rabbitmqctl status"
+      interval: 10s
+      timeout: 30s
+      retries: 10
+    
+  worker:
+    image: doubleman89/scraper-worker
+    build: 
+      dockerfile: Dockerfile
+    shm_size: '8gb'
+    links:
+        - rabbitmq
+    ports:
+      - '8888:8888'
+      - 5555:5555
+    env_file:
+      - ./.env
+    # command: 
+    #   - /usr/bin/supervisord
+    #   - /usr/src/app/scraper/start-flower.sh
+    environment:
+      JUPYTER_TOKEN: hi
+      rabbitmq_uri: amqp:rabbitmq:5672 #amqp://127.0.0.1:5672
+    volumes:
+      - ../jupyter/:/usr/src/app/jupyter\
+    # Make it wait for rabbitmq deployment
+    depends_on: 
+      rabbitmq:
+        condition: service_healthy
+    #restart: always
+  # flower:
+  #   image: doubleman89/scraper-flower
+  #   build:
+  #     dockerfile: Dockerfile
+  #   command: /usr/src/app/scraper/start-flower.sh
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - 5555:5555
+  #   depends_on:
+  #     - worker
+  #     - rabbitmq
+    #restart: always
+
+
