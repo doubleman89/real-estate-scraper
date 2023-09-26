@@ -6,6 +6,6 @@
 - [x] * 3 	Scraper started by Celery
 - [x] * 4   Project in docker environment
 - [ ] * 5 	Collecting data from OtoDom  - ongoing 
-- [ ] * 6 	Machine learning model creation steps ... 
+- [ ] * 6 	Possible further steps? 
 - [ ] * 7 	...
 
